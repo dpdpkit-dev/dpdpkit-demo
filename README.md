@@ -31,6 +31,15 @@ server-rendered: `{% dpdp_notice %}` and `{% dpdp_preferences %}` show the notic
 views are guarded by `@requires_consent("marketing")` and `RequiresConsentMixin`. The "Act as" links set a
 cookie naming one of the two fictional users. The database is a temporary SQLite file, removed on exit.
 
+## Any-stack page
+
+`/packages/server` frames a plain HTML page (`app/server_demo/page.html`) that loads `@dpdpkit/embed` with a
+script tag and uses `<dpdp-consent>`, `<dpdp-preferences>` and `<dpdp-rights-form>`. The published `dpdpkit-server`
+app runs in this process at `/demo/server/api`, with a temporary SQLite database. The routes under
+`/demo/server/backend` play the page's own backend: they hold the server's API key (new on every start), read the
+"Act as" cookie and mint the short-lived token the widgets fetch through `token-url`. `npm run build` copies the
+published embed bundle to `app/static/dist/embed.js`.
+
 ## Run
 
 ```

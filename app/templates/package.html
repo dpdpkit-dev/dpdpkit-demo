@@ -10,6 +10,8 @@
 {% include "demo_fastapi.html" %}
 {% elif package.slug == "django" %}
 {% include "demo_django.html" %}
+{% elif package.slug == "server" %}
+{% include "demo_server.html" %}
 {% else %}
 <p class="pending">The interactive demo for this page is coming ({{ package.demo_ticket }}).</p>
 {% endif %}

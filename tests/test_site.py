@@ -47,7 +47,7 @@ def test_dependencies_come_from_registries():
         assert not re.search(r"(^-e|file:|\.\./|@ |link:|git\+)", spec), spec
     for name in ("dpdpkit-core", "dpdpkit-fastapi", "dpdpkit-django", "dpdpkit-server", "dpdpkit-pii"):
         assert any(s.startswith(f"{name}==") for s in specs), name
-    assert set(pkg["dependencies"]) == {"@dpdpkit/client", "@dpdpkit/react"}
+    assert set(pkg["dependencies"]) == {"@dpdpkit/client", "@dpdpkit/embed", "@dpdpkit/react"}
 
 
 def test_fastapi_page_mounts_the_react_demo():
@@ -117,3 +117,41 @@ def test_django_demo_template_tags_and_consent_checks():
 
         c.post(f"{base}/preferences/", data={"notice_version": "1", "locale": "en", "csrfmiddlewaretoken": token})
         assert post("/offers/send/").status_code == 403  # unticking withdraws
+
+
+def test_server_page_embeds_the_plain_html_demo():
+    html = client.get("/packages/server").text
+    assert 'src="/demo/server/"' in html
+    assert "coming (DEMO-04)" not in html
+
+
+def test_server_demo_is_plain_html_with_the_embed_script_tag():
+    page = client.get("/demo/server/").text
+    assert '<script src="/static/dist/embed.js"></script>' in page
+    for tag in ("dpdp-consent", "dpdp-preferences", "dpdp-rights-form"):
+        assert f"<{tag} " in page
+    assert 'type="module"' not in page and "{{" not in page
+    assert "does not provide legal advice" in page
+    assert client.get("/static/dist/embed.js").status_code == 200  # copied by `npm run build`
+
+
+def test_server_demo_token_flow_and_widget_api():
+    base = "/demo/server"
+    with TestClient(app) as c:
+        assert c.post(f"{base}/backend/privacy-token").status_code == 401  # nobody signed in
+        assert c.get(f"{base}/backend/act-as/nobody").status_code == 404
+        c.get(f"{base}/backend/act-as/u_asha", follow_redirects=False)
+        issued = c.post(f"{base}/backend/privacy-token")
+        assert issued.status_code == 200
+        who = {"Authorization": f"Bearer {issued.json()['token']}"}
+        api = f"{base}/api/dpdp"
+
+        assert c.get(f"{api}/consents/me").status_code == 401  # a widget call needs the token
+        notice = c.get(f"{api}/notices/current", headers=who).json()
+        assert {p["id"] for p in notice["purposes"]} == {"account", "marketing"}
+        granted = c.post(f"{api}/consents", headers=who, json={"decisions": [{"purpose": "marketing", "granted": True}]})
+        assert granted.status_code == 201
+        opened = c.post(f"{api}/requests", headers=who, json={"kind": "access"})
+        assert opened.status_code == 201
+        assert [r["id"] for r in c.get(f"{api}/requests", headers=who).json()["items"]] == [opened.json()["id"]]
+        assert c.post(f"{base}/api/v1/tokens", json={"subject": "u_asha"}).status_code == 401  # needs the API key

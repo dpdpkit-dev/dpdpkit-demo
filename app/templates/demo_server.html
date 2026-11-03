@@ -1,0 +1,15 @@
+<p>
+  This page runs the real <code>dpdpkit-server</code> app, mounted on this site at
+  <code>{{ server_prefix }}/api</code>, and the frame below is plain HTML with no framework: one
+  <code>&lt;script&gt;</code> tag loads <code>@dpdpkit/embed</code>, and three elements
+  (<code>&lt;dpdp-consent&gt;</code>, <code>&lt;dpdp-preferences&gt;</code>, <code>&lt;dpdp-rights-form&gt;</code>)
+  do the rest. The page's own backend, which could be written in any language, keeps the server's API key and hands
+  each widget a short-lived signed token for the person signed in, through <code>token-url</code>. Pick a fictional
+  person, give or withdraw consent, then open a rights request. Data is kept in a temporary database and resets when
+  the site restarts.
+</p>
+<pre><code>&lt;script src="https://cdn.jsdelivr.net/npm/@dpdpkit/embed@0.1.0-alpha.2/dist/embed.js"&gt;&lt;/script&gt;
+&lt;dpdp-consent api="/dpdp" token-url="/api/privacy-token"&gt;&lt;/dpdp-consent&gt;</code></pre>
+<iframe id="server-demo" title="dpdpkit-server and @dpdpkit/embed demo" src="{{ server_prefix }}/" width="100%" height="1000"
+        style="border: 1px solid #ddd; border-radius: 6px;"></iframe>
+<p><a href="{{ server_prefix }}/" target="_blank" rel="noopener">Open the demo in its own tab</a></p>

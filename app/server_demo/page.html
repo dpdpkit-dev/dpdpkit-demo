@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>dpdpkit-server and @dpdpkit/embed demo</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <!-- One tag registers <dpdp-consent>, <dpdp-preferences> and <dpdp-rights-form>.
+       On your own site: https://cdn.jsdelivr.net/npm/@dpdpkit/embed@0.1.0-alpha.2/dist/embed.js -->
+  <script src="/static/dist/embed.js"></script>
+</head>
+<body>
+  <main>
+    <p>{{ who }} Act as: {{ act_as }}</p>
+
+    <h3>Consent notice</h3>
+    <dpdp-consent api="{{ api }}" token-url="{{ prefix }}/backend/privacy-token"></dpdp-consent>
+
+    <h3>Preferences</h3>
+    <dpdp-preferences api="{{ api }}" token-url="{{ prefix }}/backend/privacy-token"></dpdp-preferences>
+
+    <h3>Rights request</h3>
+    <dpdp-rights-form api="{{ api }}" token-url="{{ prefix }}/backend/privacy-token"></dpdp-rights-form>
+  </main>
+  <footer>
+    <p class="disclaimer"><strong>Disclaimer.</strong> {{ disclaimer }}</p>
+    <p class="fictional">{{ fictional_note }}</p>
+  </footer>
+</body>
+</html>
