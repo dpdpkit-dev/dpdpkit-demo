@@ -1,0 +1,118 @@
+<p>
+  This page runs <code>dpdpkit-core</code> and <code>dpdpkit-policies</code> directly, with no web framework or
+  database in between. Each request builds a small kit on an in-memory repository, seeded with fictional people, so
+  nothing you do here is kept or shared. The four sections below are the ledger, retention, the rule-to-code map and
+  the sector overlays.
+</p>
+<h2 id="core-ledger">Ledger tamper check</h2>
+<p>
+  Consent decisions go into an append-only chain where each row's SHA-256 hash covers the row and the hash before it.
+  Pick a change to make to the stored rows, then verify.
+</p>
+<pre><code>kit.ledger.verify_report()   # ok, or the first bad row
+kit.ledger.root_hash()       # export this somewhere the operator cannot rewrite</code></pre>
+<form method="get" action="/packages/core#core-ledger">
+  <input type="hidden" name="horizon" value="{{ core_retention.horizon }}">
+  <input type="hidden" name="pack" value="{{ core_policy.pack }}">
+  {% for o in core_policy.overlays_chosen %}<input type="hidden" name="overlay" value="{{ o }}">{% endfor %}
+  <p>
+    {% for key, label in core_tampers.items() %}
+    <label><input type="radio" name="tamper" value="{{ key }}"{% if key == core_ledger.tamper %} checked{% endif %}> {{ label }}</label><br>
+    {% endfor %}
+  </p>
+  <p><button type="submit">Verify the ledger</button></p>
+</form>
+{% set led = core_ledger %}
+<p id="core-ledger-result">
+  {% if led.report.ok %}
+  <strong>OK</strong>: {{ led.report.checked }} rows checked, every hash and link matches.
+  {% else %}
+  <strong>TAMPERED</strong>: {{ led.report.chain }} row <code>{{ led.report.failed_row }}</code> failed: {{ led.report.reason }}.
+  {% endif %}
+  Consent rows: {{ led.rows_before }} before, {{ led.rows_after }} now.
+</p>
+<p>
+  Root hash exported before the change: <code>{{ led.root_exported[:16] }}…</code>; now:
+  <code>{{ led.root_now[:16] }}…</code>
+  ({% if led.root_matches %}same{% else %}different{% endif %}).
+  {% if led.report.ok and not led.root_matches %}
+  <strong>Verification passed but the root hash moved</strong>: rows cut off the end leave a valid chain, and only a
+  root hash held outside the database reveals it.
+  {% endif %}
+</p>
+
+<h2 id="core-retention">Retention</h2>
+<p>
+  The <code>account</code> purpose erases after 1095 days without activity. The policy pack requires a
+  {{ core_retention.warn_hours }}-hour warning first, and processing logs are kept at least
+  {{ core_retention.log_days }} days. These people were last active this many days ago:
+  {% for p, d in core_retention.people.items() %}{{ p }} ({{ d }}){% if not loop.last %}, {% endif %}{% endfor %}.
+</p>
+<pre><code>kit.retention.preview(now, horizon=timedelta(days={{ core_retention.horizon }}))</code></pre>
+<form method="get" action="/packages/core#core-retention">
+  <input type="hidden" name="tamper" value="{{ core_ledger.tamper }}">
+  <input type="hidden" name="pack" value="{{ core_policy.pack }}">
+  {% for o in core_policy.overlays_chosen %}<input type="hidden" name="overlay" value="{{ o }}">{% endfor %}
+  <p>
+    <label for="core-horizon">Look ahead (days)</label>
+    <input id="core-horizon" name="horizon" type="number" min="0" max="1500" value="{{ core_retention.horizon }}">
+    <button type="submit">Preview</button>
+  </p>
+</form>
+{% if core_retention["items"] %}
+<table id="core-preview">
+  <tr><th>Person</th><th>Purpose</th><th>Action</th><th>When</th><th>Status</th></tr>
+  {% for i in core_retention["items"] %}
+  <tr><td>{{ i.principal }}</td><td>{{ i.purpose }}</td><td>{{ i.action }}</td><td>{{ i.at }}</td><td>{{ i.status }}</td></tr>
+  {% endfor %}
+</table>
+<p>An erasure only runs after its warning is recorded as delivered; otherwise it goes to the needs-attention queue.</p>
+{% else %}
+<p id="core-preview">Nothing is due in the next {{ core_retention.horizon }} days.</p>
+{% endif %}
+
+<h2 id="core-policy">Policy pack and overlays</h2>
+<p>
+  Pick the pack and the sector overlays to switch on. The table lists what changes against the base pack.
+</p>
+<pre><code>Policy.load("{{ core_policy.pack }}", overlays={{ core_policy.overlays_chosen }})</code></pre>
+<form method="get" action="/packages/core#core-policy">
+  <input type="hidden" name="tamper" value="{{ core_ledger.tamper }}">
+  <input type="hidden" name="horizon" value="{{ core_retention.horizon }}">
+  <p>
+    <label for="core-pack">Pack</label>
+    <select id="core-pack" name="pack">
+      {% for p in core_policy.packs %}<option{% if p == core_policy.pack %} selected{% endif %}>{{ p }}</option>{% endfor %}
+    </select>
+  </p>
+  <p>
+    {% for o in core_policy.overlays_available %}
+    <label><input type="checkbox" name="overlay" value="{{ o }}"{% if o in core_policy.overlays_chosen %} checked{% endif %}> {{ o }}</label><br>
+    {% endfor %}
+  </p>
+  <p><button type="submit">Apply overlays</button></p>
+</form>
+{% if core_policy.changes %}
+<table id="core-changes">
+  <tr><th>Key</th><th>Base pack</th><th>With overlays</th></tr>
+  {% for c in core_policy.changes %}<tr><td><code>{{ c.key }}</code></td><td>{{ c.old }}</td><td>{{ c.new }}</td></tr>{% endfor %}
+</table>
+{% else %}
+<p id="core-changes">No overlays are on, so the pack is unchanged.</p>
+{% endif %}
+
+<h2 id="core-rules">Rule to code</h2>
+<p>
+  Every legal number in the pack, the part of the Act or Rules it comes from, and the module that uses it. Rows an
+  overlay changes are marked.
+</p>
+<table id="core-rules-table">
+  <tr><th>Pack key</th><th>Value</th><th>Legal source</th><th>What it controls</th><th>Code</th></tr>
+  {% for r in core_policy.rules %}
+  <tr{% if r.from_overlay %} style="background: #e8f3fd;"{% endif %}>
+    <td><code>{{ r.key }}</code></td><td>{{ r.value }}{% if r.from_overlay %} (overlay){% endif %}</td>
+    <td>{{ r.source }}</td><td>{{ r.summary }}</td>
+    <td>{% for m in r.used_by %}<code>{{ m }}</code>{% if not loop.last %}, {% endif %}{% endfor %}</td>
+  </tr>
+  {% endfor %}
+</table>

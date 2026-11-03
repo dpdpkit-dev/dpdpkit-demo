@@ -223,3 +223,30 @@ def test_pii_report_downloads():
     assert data["summary"] and any(not f["registered"] for f in data["findings"])
     assert client.get("/demo/pii/report", params={"format": "md"}).text.startswith("# Personal data scan")
     assert "<table>" in client.get("/demo/pii/report", params={"format": "html"}).text
+
+
+def test_core_page_verifies_an_untouched_ledger():
+    html = client.get("/packages/core").text
+    assert "coming (DEMO-08)" not in html
+    assert "<strong>OK</strong>" in html and "TAMPERED" not in html
+    assert "retention.erasure_pre_notice_hours" in html
+
+
+def test_core_page_catches_edit_and_delete_and_flags_truncation():
+    for tamper in ("edit", "delete"):
+        assert "TAMPERED" in client.get("/packages/core", params={"tamper": tamper}).text
+    cut = client.get("/packages/core", params={"tamper": "truncate"}).text
+    assert "<strong>OK</strong>" in cut and "root hash moved" in cut
+
+
+def test_core_page_overlays_change_the_policy():
+    plain = client.get("/packages/core").text
+    assert "No overlays are on" in plain and "breach.cert_in_report_hours" in plain  # rule map row, not enabled
+    on = client.get("/packages/core", params={"overlay": "cert-in-2022"}).text
+    assert "No overlays are on" not in on and "log_retention_in_india_days" in on
+
+
+def test_core_page_retention_horizon():
+    now = client.get("/packages/core", params={"horizon": "0"}).text
+    assert "<td>u_kabir</td>" in now and "<td>u_vikram</td>" not in now  # only the overdue warning is due today
+    assert "<td>u_vikram</td>" in client.get("/packages/core", params={"horizon": "100"}).text

@@ -66,6 +66,15 @@ once; the visitor edits a list of registered names (`table.column`, `*` wildcard
 diff, showing the gaps first, the registry entries that matched nothing, and the report. The report can be downloaded
 as JSON, Markdown or HTML from `/demo/pii/report`. Reports hold names, entity types and counts, never values.
 
+## Core page
+
+`/packages/core` calls `dpdpkit-core` and `dpdpkit-policies` directly (`app/core_demo.py`). Each request builds a small
+kit on an in-memory repository seeded with fictional people, so nothing is stored or shared between visitors. Query
+parameters drive four sections: `tamper` (`none`, `edit`, `delete`, `truncate`) edits the consent rows and re-runs
+`ledger.verify_report()`, with a tail truncation caught only by the root hash taken before the change; `horizon` sets
+the days for `retention.preview()`; `pack` and `overlay` (repeatable) pick what `Policy.load()` merges, with
+`Policy.diff()` listing the changes; and the rule-to-code table joins `load_rule_map()` with the chosen pack's values.
+
 ## Run
 
 ```
