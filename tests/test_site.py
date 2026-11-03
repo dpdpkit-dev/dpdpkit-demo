@@ -202,3 +202,24 @@ def test_admin_backend_is_seeded_with_requests_consent_retention_and_an_incident
 def test_admin_seeding_does_not_disturb_the_fastapi_demo():
     api = "/demo/fastapi/dpdp"
     assert client.get(f"{api}/admin/requests").status_code in (401, 403)  # that backend has no admin guard
+
+
+def test_pii_page_shows_registry_gaps_without_values():
+    html = client.get("/packages/pii").text
+    assert "coming (DEMO-07)" not in html
+    assert "customers.pan" in html and "GAP" in html and "IN_PAN" in html
+    assert "ABCPV1234F" not in html  # counts and names only
+
+
+def test_pii_registry_edit_changes_the_gaps():
+    narrow = client.get("/packages/pii", params={"registry": "customers.*\norders.*\nvendors.*\nghost.col"}).text
+    assert "GAP" not in narrow and "ghost.col" in narrow  # nothing left unregistered; ghost.col matched nothing
+    assert "GAP" in client.get("/packages/pii", params={"registry": ""}).text
+
+
+def test_pii_report_downloads():
+    r = client.get("/demo/pii/report", params={"format": "json"})
+    data = r.json()
+    assert data["summary"] and any(not f["registered"] for f in data["findings"])
+    assert client.get("/demo/pii/report", params={"format": "md"}).text.startswith("# Personal data scan")
+    assert "<table>" in client.get("/demo/pii/report", params={"format": "html"}).text

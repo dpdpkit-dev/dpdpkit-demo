@@ -58,6 +58,14 @@ data is fictional. The published wheel carries a placeholder dashboard page, so 
 `scripts/fetch_admin_bundle.py`, which downloads the release pinned in `admin-bundle.version`, checks its sha256
 and unpacks it to `app/static/dist/admin`; the site serves it at `/demo/admin/dpdp/admin/ui/`.
 
+## PII page
+
+`/packages/pii` runs `dpdpkit-pii` on a fictional in-memory SQLite database built at start-up by `app/pii_demo.py`
+(customers, orders, vendors and products with made-up PAN, Aadhaar, GSTIN, IFSC, UPI and mobile values). The scan runs
+once; the visitor edits a list of registered names (`table.column`, `*` wildcards) and the page rebuilds the registry
+diff, showing the gaps first, the registry entries that matched nothing, and the report. The report can be downloaded
+as JSON, Markdown or HTML from `/demo/pii/report`. Reports hold names, entity types and counts, never values.
+
 ## Run
 
 ```

@@ -1,0 +1,45 @@
+<p>
+  This page runs <code>dpdpkit-pii</code> on a small fictional database that was built when the site started:
+  <code>customers</code>, <code>orders</code>, <code>vendors</code> and <code>products</code>, with made-up people,
+  PAN, Aadhaar, GSTIN, IFSC, UPI and mobile numbers. The scanner reads a capped sample of each column through a
+  read-only connection and reports names, entity types and counts, never values. Below, the names in the box stand
+  for what a team has registered (<code>table.column</code>, with <code>*</code> wildcards). Anything the scan found
+  that the registry does not cover is a gap and is listed first. Edit the list and press the button to see the gaps
+  change.
+</p>
+<pre><code>scan = scan_database(engine, sample=100)
+report = build_report(scan, registry=["customers.full_name", "orders.*"])</code></pre>
+<form method="get" action="/packages/pii#pii-report">
+  <p>
+    <label for="pii-registry">Registered names, one per line</label><br>
+    <textarea id="pii-registry" name="registry" rows="6" cols="40">{{ pii_registry }}</textarea>
+  </p>
+  <p><button type="submit">Compare with the scan</button></p>
+</form>
+<div id="pii-report">
+  <h2>Report</h2>
+  <ul id="pii-summary">
+    {% for label, count in pii_summary.items() %}<li>{{ label }}: {{ count }}</li>{% endfor %}
+  </ul>
+  <table id="pii-findings">
+    <tr><th>Name</th><th>Detected</th><th>Sampled</th><th>Confidence</th><th>Registered</th></tr>
+    {% for row in pii_rows %}
+    <tr class="{{ 'registered' if row.registered else 'gap' }}"{% if not row.registered %} style="background: #fde8e8;"{% endif %}>
+      <td>{{ row.name }}</td><td>{{ row.detected }}</td><td>{{ row.sampled }}</td>
+      <td>{{ '%.2f' % row.confidence }}</td><td>{{ 'yes' if row.registered else 'GAP' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% if pii_unmatched %}
+  <h3>Registered but not found in the scan</h3>
+  <ul>{% for name in pii_unmatched %}<li>{{ name }}</li>{% endfor %}</ul>
+  {% endif %}
+  <p>
+    Download this report as
+    {% for fmt in ("json", "md", "html") %}<a href="{{ pii_prefix }}/report?format={{ fmt }}&amp;registry={{ pii_registry | urlencode }}">{{ fmt }}</a>{% if not loop.last %}, {% endif %}{% endfor %}.
+  </p>
+  <details>
+    <summary>Markdown report</summary>
+    <pre><code>{{ pii_markdown }}</code></pre>
+  </details>
+</div>
