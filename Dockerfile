@@ -1,5 +1,6 @@
 # One image for the whole demo site: the React and embed bundles are built in a Node stage, the site runs on Python.
-FROM node:22-slim AS web
+# Trixie: its Python has the safe tar extraction scripts/fetch_admin_bundle.py uses.
+FROM node:22-trixie-slim AS web
 RUN apt-get update && apt-get install -y --no-install-recommends python-is-python3 ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY package.json package-lock.json vite.config.js admin-bundle.version ./
