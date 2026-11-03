@@ -250,3 +250,29 @@ def test_core_page_retention_horizon():
     now = client.get("/packages/core", params={"horizon": "0"}).text
     assert "<td>u_kabir</td>" in now and "<td>u_vikram</td>" not in now  # only the overdue warning is due today
     assert "<td>u_vikram</td>" in client.get("/packages/core", params={"horizon": "100"}).text
+
+
+def test_ci_page_lints_a_good_config_and_fails_a_bad_one():
+    good = client.get("/packages/ci").text
+    assert "coming (DEMO-09)" not in good
+    assert "<strong>PASS</strong>: exit code 0" in good
+    strict = client.get("/packages/ci", params={"strict": "1"}).text
+    assert "<strong>FAIL</strong>: exit code 1" in strict and "notice:placeholders" in strict
+    for sample, finding in (("missing-retention", "marketing"), ("no-notice", "no notice is configured")):
+        bad = client.get("/packages/ci", params={"sample": sample}).text
+        assert "<strong>FAIL</strong>: exit code 1" in bad and finding in bad
+        assert "::error file=dpdpkit.yaml" in bad
+
+
+def test_ci_page_lints_an_edited_config():
+    edited = "purposes: []\n"
+    html = client.get("/packages/ci", params={"config": edited}).text
+    assert "must name a policy pack" in html
+
+
+def test_ci_page_runs_conformance_against_a_passing_and_a_failing_app():
+    assert "No run yet" in client.get("/packages/ci").text
+    ok = client.get("/packages/ci", params={"target": "passing"}).text
+    assert "<strong>PASS</strong>:" in ok and " failed" not in ok
+    bad = client.get("/packages/ci", params={"target": "failing"}).text
+    assert "<strong>FAIL</strong>:" in bad and "<td>failed</td>" in bad and "test_admin_requires_role" in bad

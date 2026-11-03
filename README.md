@@ -75,6 +75,15 @@ parameters drive four sections: `tamper` (`none`, `edit`, `delete`, `truncate`) 
 the days for `retention.preview()`; `pack` and `overlay` (repeatable) pick what `Policy.load()` merges, with
 `Policy.diff()` listing the changes; and the rule-to-code table joins `load_rule_map()` with the chosen pack's values.
 
+## CI tools page
+
+`/packages/ci` runs both CI tools for real (`app/ci_demo.py`). The lint section calls `run_lint()`, the function behind
+`dpdpkit lint` and `dpdpkit-lint-action`, on a sample config (`sample`: `good`, `missing-retention`, `no-notice`, derived
+from `app/lint_samples/good.yaml`) or on text the visitor edits (`config`); `strict=1` also fails on warnings. It shows the
+job-log output, the GitHub annotations and the exit code. The conformance section (`target`: `passing` or `failing`)
+runs `python -m dpdpkit_conformance` as a subprocess against the apps in `app/conformance_demo/`; the failing one lets
+every caller in as an admin. Each target runs once per process and its per-test results are cached.
+
 ## Run
 
 ```

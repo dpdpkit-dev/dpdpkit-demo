@@ -20,6 +20,8 @@
 {% include "demo_pii.html" %}
 {% elif package.slug == "core" %}
 {% include "demo_core.html" %}
+{% elif package.slug == "ci" %}
+{% include "demo_ci.html" %}
 {% else %}
 <p class="pending">The interactive demo for this page is coming ({{ package.demo_ticket }}).</p>
 {% endif %}

@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from . import admin_demo, core_demo, django_demo, fastapi_demo, pii_demo, server_demo
+from . import admin_demo, ci_demo, core_demo, django_demo, fastapi_demo, pii_demo, server_demo
 from .packages import BY_SLUG, DISCLAIMER, FICTIONAL_NOTE, PACKAGES
 
 BASE = Path(__file__).parent
@@ -36,6 +36,8 @@ def package_page(request: Request, slug: str):
     context = {"package": package, "demo_users": fastapi_demo.DEMO_USERS, "demo_prefix": fastapi_demo.PREFIX,
                "django_prefix": django_demo.PREFIX, "server_prefix": server_demo.PREFIX,
                "admin_ui": f"{admin_demo.PREFIX}{admin_demo.UI_PATH}/"}
+    if slug == "ci":
+        context.update(ci_demo.view(request))
     if slug == "core":
         context.update(core_demo.view(request))
     if slug == "pii":

@@ -1,0 +1,74 @@
+<p>
+  This page runs both CI tools for real. The lint check calls the same <code>dpdpkit lint</code> that
+  <code>dpdpkit-lint-action</code> runs in a workflow, and the conformance suite runs as a subprocess against two small
+  apps, one that passes and one that fails. Nothing is stored. A pass means the configuration is complete or the API
+  matches the contract; it is not a statement that your notice or retention periods are lawful.
+</p>
+
+<h2 id="ci-lint">dpdpkit-lint-action</h2>
+<p>
+  The action fails a pull request when a <code>dpdpkit.yaml</code> has no notice, or a purpose has no retention rule.
+  Pick a config, or edit it below, and lint it.
+</p>
+<pre><code>{{ ci_lint.workflow }}</code></pre>
+<form method="get" action="/packages/ci#ci-lint">
+  <p>
+    {% for key, label in ci_lint.samples.items() %}
+    <label><input type="radio" name="sample" value="{{ key }}"{% if key == ci_lint.sample %} checked{% endif %}> {{ label }}</label><br>
+    {% endfor %}
+  </p>
+  <p><label><input type="checkbox" name="strict" value="1"{% if ci_lint.strict %} checked{% endif %}> <code>strict</code>: also fail on warnings</label></p>
+  <p><button type="submit">Run the lint</button></p>
+</form>
+<p id="ci-lint-result">
+  {% if ci_lint.exit_code == 0 %}<strong>PASS</strong>: exit code 0, the job goes green.
+  {% else %}<strong>FAIL</strong>: exit code {{ ci_lint.exit_code }}, the job goes red and the pull request is blocked.{% endif %}
+</p>
+<h3>Output in the job log</h3>
+<pre id="ci-lint-output"><code>{{ ci_lint.plain }}</code></pre>
+<h3>Annotations on the pull request</h3>
+{% if ci_lint.annotations %}
+<pre id="ci-lint-annotations"><code>{{ ci_lint.annotations }}</code></pre>
+{% else %}
+<p id="ci-lint-annotations">Nothing to annotate: only failures and warnings become annotations.</p>
+{% endif %}
+<h3>The config being linted</h3>
+<form method="get" action="/packages/ci#ci-lint">
+  <input type="hidden" name="sample" value="{{ ci_lint.sample }}">
+  {% if ci_lint.strict %}<input type="hidden" name="strict" value="1">{% endif %}
+  <p>
+    <label for="ci-config">dpdpkit.yaml (fictional values only)</label><br>
+    <textarea id="ci-config" name="config" rows="18" cols="90" maxlength="20000">{{ ci_lint.text }}</textarea>
+  </p>
+  <p><button type="submit">Lint my edit</button></p>
+</form>
+
+<h2 id="ci-conformance">dpdpkit-conformance</h2>
+<p>
+  The suite is black-box: it sends requests to an app and checks status codes and bodies against the OpenAPI
+  contract. Adapter CI runs it with <code>DPDPKIT_ASGI_APP=app:app dpdpkit-conformance</code>. Pick an app to run it
+  against (a run takes a few seconds).
+</p>
+<form method="get" action="/packages/ci#ci-conformance">
+  <input type="hidden" name="sample" value="{{ ci_lint.sample }}">
+  <p>
+    {% for key, label in ci_targets.items() %}
+    <label><input type="radio" name="target" value="{{ key }}"{% if key == ci_target %} checked{% endif %}> {{ label }}</label><br>
+    {% endfor %}
+  </p>
+  <p><button type="submit">Run the conformance suite</button></p>
+</form>
+{% if ci_run %}
+<p id="ci-conformance-result">
+  {% if ci_run.exit_code == 0 %}<strong>PASS</strong>{% else %}<strong>FAIL</strong>{% endif %}:
+  {{ ci_run.summary }} (exit code {{ ci_run.exit_code }}).
+</p>
+<table id="ci-conformance-table">
+  <tr><th>Test</th><th>Result</th><th>Why</th></tr>
+  {% for t in ci_run.tests %}
+  <tr><td><code>{{ t.name }}</code></td><td>{{ t.outcome }}</td><td>{{ t.reason }}</td></tr>
+  {% endfor %}
+</table>
+{% else %}
+<p id="ci-conformance-result">No run yet.</p>
+{% endif %}
