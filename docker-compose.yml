@@ -1,0 +1,16 @@
+# The whole demo is one service: the site and every backend it frames run in this process.
+services:
+  demo:
+    build: .
+    image: dpdpkit-demo
+    restart: always            # brings the site back, with fresh seed data, after each scheduled reset
+    ports:
+      - "8000:8000"
+    environment:
+      DEMO_RESET_HOURS: "24"   # 0 turns the scheduled reset off
+      DEMO_RATE_READ: "240"    # requests per minute per client, 0 = unlimited
+      DEMO_RATE_WRITE: "60"    # POST/PUT/PATCH/DELETE per minute per client
+      DEMO_TRUST_PROXY: "0"    # set to 1 behind a proxy that sets X-Forwarded-For
+    read_only: true
+    tmpfs:
+      - /tmp

@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 5 * * *"   # daily, to catch a registry release that breaks the site
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pip install -r requirements-dev.txt
+      - run: npm ci && npm run build
+      - run: pytest -q
+      - name: Smoke test every page against a running server
+        run: |
+          uvicorn app.main:app --port 8000 &
+          python scripts/smoke.py http://127.0.0.1:8000 --wait 60
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image and smoke test it
+        run: |
+          docker build -t dpdpkit-demo .
+          docker run -d --name demo -p 8000:8000 dpdpkit-demo
+          python3 scripts/smoke.py http://127.0.0.1:8000 --wait 60 || { docker logs demo; exit 1; }

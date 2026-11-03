@@ -84,6 +84,28 @@ job-log output, the GitHub annotations and the exit code. The conformance sectio
 runs `python -m dpdpkit_conformance` as a subprocess against the apps in `app/conformance_demo/`; the failing one lets
 every caller in as an admin. Each target runs once per process and its per-test results are cached.
 
+## Deploy
+
+The whole site is one container (`Dockerfile`, `docker-compose.yml`): a Node stage builds the React, embed and admin
+bundles and the Python stage runs `uvicorn app.main:app`. Every backend the pages frame runs in that process, so one
+service is all a host needs. Any host that runs a container works; the choice is DEMO-10.
+
+- **Data reset.** All demo data is in memory or in temporary files and is seeded at start-up. `DEMO_RESET_HOURS`
+  (24 in the image, 0 = off) makes the process exit after that long and the restart policy (`restart: always`) brings it
+  back with fresh data. On a host without a restart policy, restart the service on a schedule instead.
+- **Rate limits.** `app/ops.py` limits each client per minute: `DEMO_RATE_READ` (240) for reads and `DEMO_RATE_WRITE`
+  (60) for POST/PUT/PATCH/DELETE; 0 turns a limit off. Over the limit gets a 429 with `Retry-After`. Static files and
+  `/healthz` are exempt. Behind a proxy set `DEMO_TRUST_PROXY=1` so the client is the first `X-Forwarded-For` entry;
+  only do that when the proxy overwrites the header. Limits are per process, which is right for a single container.
+- **Health.** `GET /healthz` returns `{"status": "ok"}`.
+- **Smoke test.** `python scripts/smoke.py <url> [--wait 60]` loads the home page and every package page, checks the
+  disclaimer, the admin dashboard, the PII report and every `/static/` asset the pages reference. The `ci` workflow runs
+  it against a local server and against the built image on every push and daily; `smoke-live` runs it against the
+  repository variable `DEMO_URL` every six hours and does nothing until that is set.
+
+Not done yet: a workflow that pushes the image to the host. It needs the host from DEMO-10 and its credentials as
+repository secrets.
+
 ## Run
 
 ```

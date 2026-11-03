@@ -7,12 +7,13 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from . import admin_demo, ci_demo, core_demo, django_demo, fastapi_demo, pii_demo, server_demo
+from . import admin_demo, ci_demo, core_demo, django_demo, fastapi_demo, ops, pii_demo, server_demo
 from .packages import BY_SLUG, DISCLAIMER, FICTIONAL_NOTE, PACKAGES
 
 BASE = Path(__file__).parent
 
-app = FastAPI(title="dpdpkit demo")
+app = FastAPI(title="dpdpkit demo", lifespan=ops.reset_lifespan(ops.reset_hours()))
+app.add_middleware(ops.RateLimitMiddleware)
 fastapi_demo.install(app)
 django_demo.install(app)
 server_demo.install(app)
@@ -21,6 +22,11 @@ pii_demo.install(app)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
 templates.env.globals.update(packages=PACKAGES, disclaimer=DISCLAIMER, fictional_note=FICTIONAL_NOTE)
+
+
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
 
 
 @app.get("/", response_class=HTMLResponse)

@@ -1,0 +1,21 @@
+name: smoke-live
+
+# Checks every page of the deployed site. Set the repository variable DEMO_URL (for example https://demo.example.org)
+# once the host is chosen (DEMO-10); until then this workflow does nothing.
+on:
+  schedule:
+    - cron: "47 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: ${{ vars.DEMO_URL != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/smoke.py "$DEMO_URL" --wait 120
+        env:
+          DEMO_URL: ${{ vars.DEMO_URL }}
