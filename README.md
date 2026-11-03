@@ -40,6 +40,13 @@ app runs in this process at `/demo/server/api`, with a temporary SQLite database
 "Act as" cookie and mint the short-lived token the widgets fetch through `token-url`. `npm run build` copies the
 published embed bundle to `app/static/dist/embed.js`.
 
+## Client page
+
+`/packages/client` uses `@dpdpkit/client` on its own, with no components, against the FastAPI demo backend at
+`/demo/fastapi/dpdp`. `frontend/client-demo.js` passes the client a custom `fetch`, so each request (method, URL,
+headers, body) and response (status, body) is printed in a log, and a failure shows the `DpdpError` code. Each
+button runs one client call. The "Act as" select sets the `X-User` header.
+
 ## Run
 
 ```

@@ -10,6 +10,6 @@ export default defineConfig({
     emptyOutDir: true,
     cssCodeSplit: false,
     rollupOptions: { output: { entryFileNames: "[name].js" } },
-    lib: { entry: { "fastapi-demo": "frontend/fastapi-demo.jsx" }, formats: ["es"], cssFileName: "fastapi-demo" },
+    lib: { entry: { "fastapi-demo": "frontend/fastapi-demo.jsx", "client-demo": "frontend/client-demo.js" }, formats: ["es"], cssFileName: "fastapi-demo" },
   },
 });

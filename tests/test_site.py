@@ -155,3 +155,24 @@ def test_server_demo_token_flow_and_widget_api():
         assert opened.status_code == 201
         assert [r["id"] for r in c.get(f"{api}/requests", headers=who).json()["items"]] == [opened.json()["id"]]
         assert c.post(f"{base}/api/v1/tokens", json={"subject": "u_asha"}).status_code == 401  # needs the API key
+
+
+def test_client_page_mounts_the_logging_demo():
+    html = client.get("/packages/client").text
+    assert 'id="client-demo"' in html and "/static/dist/client-demo.js" in html
+    assert "coming (DEMO-05)" not in html
+    assert client.get("/static/dist/client-demo.js").status_code == 200  # built by `npm run build`
+
+
+def test_client_demo_calls_hit_the_fastapi_backend_the_client_paths():
+    # The paths @dpdpkit/client builds for the buttons on the page, against the backend it points at.
+    base = "/demo/fastapi/dpdp"
+    who = {"X-User": "u_vikram"}
+    assert client.get(f"{base}/notices/current", params={"locale": "en"}, headers=who).status_code == 200
+    granted = client.post(f"{base}/consents", headers=who, json={"decisions": [{"purpose": "marketing", "granted": True}]})
+    assert granted.status_code == 201
+    assert client.get(f"{base}/consents/me/receipt", headers=who).status_code == 200
+    assert client.post(f"{base}/consents/marketing/withdraw", headers=who).status_code == 200
+    assert client.post(f"{base}/requests", headers=who, json={"kind": "access", "details": {}}).status_code == 201
+    assert client.get(f"{base}/me/export", headers=who).status_code == 200
+    assert client.get(f"{base}/consents/me").status_code == 401  # DpdpError path: nobody signed in

@@ -1,0 +1,22 @@
+<p>
+  This page calls the real <code>dpdpkit-fastapi</code> backend, mounted on this site at
+  <code>{{ demo_prefix }}</code>, with <code>@dpdpkit/client</code> and nothing else: no components, just typed
+  calls. The client accepts a custom <code>fetch</code>, which is how every request it makes and every response it
+  gets is printed below. Pick a fictional person, press a button, and read the exchange. A non-2xx answer shows up
+  as a <code>DpdpError</code> carrying the contract's error code. Data is kept in memory and resets when the site
+  restarts.
+</p>
+<pre><code>const client = createDpdpClient({ baseUrl: "{{ demo_prefix }}", headers: { "X-User": "u_asha" }, fetch: loggingFetch });
+await client.recordConsents([{ purpose: "marketing", granted: true }]);</code></pre>
+<p>
+  <label for="client-user">Act as</label>
+  <select id="client-user">
+    {% for id, user in demo_users.items() %}<option value="{{ id }}">{{ user.name }} ({{ user.email }})</option>{% endfor %}
+  </select>
+  <button type="button" id="client-clear">Clear log</button>
+</p>
+<div id="client-demo" data-base-url="{{ demo_prefix }}">
+  <p id="client-calls"></p>
+  <div id="client-log" style="font-size: 0.85em;"><noscript>The demo needs JavaScript.</noscript></div>
+</div>
+<script type="module" src="/static/dist/client-demo.js"></script>
