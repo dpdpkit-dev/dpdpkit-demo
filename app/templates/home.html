@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>dpdpkit demo</h1>
+<p>Try each dpdpkit package on fictional data. One page per package.</p>
+<ul class="cards">
+  {% for p in packages %}
+  <li>
+    <h2><a href="/packages/{{ p.slug }}">{{ p.title }}</a></h2>
+    <p>{{ p.summary }}</p>
+    <code>{{ p.name }}</code>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

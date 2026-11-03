@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}dpdpkit demo{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">dpdpkit demo</a>
+    <nav aria-label="Packages">
+      {% for p in packages %}<a href="/packages/{{ p.slug }}">{{ p.title }}</a>{% endfor %}
+    </nav>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+  <footer>
+    <p class="disclaimer"><strong>Disclaimer.</strong> {{ disclaimer }}</p>
+    <p class="fictional">{{ fictional_note }}</p>
+  </footer>
+</body>
+</html>

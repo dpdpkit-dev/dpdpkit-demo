@@ -1,0 +1,9 @@
+{
+  "name": "dpdpkit-demo",
+  "private": true,
+  "description": "Demo website for dpdpkit. Fictional data only.",
+  "dependencies": {
+    "@dpdpkit/client": "0.1.0-alpha.1",
+    "@dpdpkit/react": "0.1.0-alpha.1"
+  }
+}

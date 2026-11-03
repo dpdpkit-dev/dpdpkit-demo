@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ package.title }} · dpdpkit demo{% endblock %}
+{% block content %}
+<h1>{{ package.title }}</h1>
+<p>{{ package.summary }}</p>
+<h2>Install</h2>
+<pre><code>{{ package.install }}</code></pre>
+<h2>Demo</h2>
+<p class="pending">The interactive demo for this page is coming ({{ package.demo_ticket }}).</p>
+{% endblock %}
