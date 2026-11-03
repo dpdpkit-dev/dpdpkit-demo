@@ -21,5 +21,6 @@ USER demo
 EXPOSE 8000
 # Data is in memory, so DEMO_RESET_HOURS makes the process exit on a schedule and the restart policy reseeds it.
 ENV DEMO_RESET_HOURS=24 DEMO_TRUST_PROXY=0
-HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/healthz', timeout=4)"
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import os, urllib.request as u; u.urlopen('http://127.0.0.1:' + os.environ.get('PORT', '8000') + '/healthz', timeout=4)"
+# Hosts such as Render set PORT.
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

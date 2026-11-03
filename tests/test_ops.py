@@ -69,6 +69,16 @@ def test_forwarded_for_only_trusted_behind_proxy():
     assert direct.get("/x", headers=headers("2.2.2.2")).status_code == 429
 
 
+def test_client_ip_header_is_used_and_cannot_be_forged_with_forwarded_for():
+    client = limited(read_limit=1, write_limit=0, client_header="CF-Connecting-IP")
+    first = {"CF-Connecting-IP": "203.0.113.1", "X-Forwarded-For": "198.51.100.1"}
+    assert client.get("/x", headers=first).status_code == 200
+    forged = {"CF-Connecting-IP": "203.0.113.1", "X-Forwarded-For": "198.51.100.2"}
+    assert client.get("/x", headers=forged).status_code == 429
+    other = {"CF-Connecting-IP": "203.0.113.2"}
+    assert client.get("/x", headers=other).status_code == 200
+
+
 def test_healthz():
     assert TestClient(app).get("/healthz").json() == {"status": "ok"}
 

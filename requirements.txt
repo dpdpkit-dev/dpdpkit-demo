@@ -2,9 +2,9 @@
 # Pre-releases are pinned exactly, so pip accepts them without --pre.
 dpdpkit-core==0.1.0a2
 dpdpkit-policies==2026.11.0a1
-dpdpkit-fastapi==0.1.0a2
-dpdpkit-django==0.1.0a2
-dpdpkit-server==0.1.0a2
+dpdpkit-fastapi==0.1.0a3
+dpdpkit-django==0.1.0a3
+dpdpkit-server==0.1.0a3
 dpdpkit-pii==0.1.0a2
 dpdpkit-conformance==0.1.0a2
 

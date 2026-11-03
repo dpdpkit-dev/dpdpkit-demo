@@ -6,9 +6,9 @@
     "build": "vite build && node scripts/copy-embed.mjs && python scripts/fetch_admin_bundle.py app/static/dist/admin"
   },
   "dependencies": {
-    "@dpdpkit/client": "0.1.0-alpha.1",
+    "@dpdpkit/client": "0.1.0-alpha.2",
     "@dpdpkit/embed": "0.1.0-alpha.2",
-    "@dpdpkit/react": "0.1.0-alpha.1"
+    "@dpdpkit/react": "0.1.0-alpha.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "6.2.1",

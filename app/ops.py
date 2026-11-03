@@ -26,23 +26,31 @@ def _int_env(name: str, default: int) -> int:
 class RateLimitMiddleware:
     """Per-client fixed-window limit. Reads and writes have separate budgets; 0 turns a budget off.
 
-    The client is the socket peer, or the first `X-Forwarded-For` entry when `DEMO_TRUST_PROXY=1` (set it only
-    behind a proxy that overwrites that header).
+    The client is the header named by `DEMO_CLIENT_IP_HEADER` (set it only to a header the host's proxy always
+    overwrites, such as `CF-Connecting-IP` on Render), else the first `X-Forwarded-For` entry when
+    `DEMO_TRUST_PROXY=1` (set it only behind a proxy that overwrites that header), else the socket peer.
     """
 
     WINDOW = 60.0
     MAX_CLIENTS = 10_000
 
     def __init__(self, app, read_limit: int | None = None, write_limit: int | None = None,
-                 trust_proxy: bool | None = None, clock=time.monotonic) -> None:
+                 trust_proxy: bool | None = None, client_header: str | None = None,
+                 clock=time.monotonic) -> None:
         self.app = app
         self.read_limit = _int_env("DEMO_RATE_READ", 240) if read_limit is None else read_limit
         self.write_limit = _int_env("DEMO_RATE_WRITE", 60) if write_limit is None else write_limit
         self.trust_proxy = os.environ.get("DEMO_TRUST_PROXY") == "1" if trust_proxy is None else trust_proxy
+        header = os.environ.get("DEMO_CLIENT_IP_HEADER", "") if client_header is None else client_header
+        self.client_header = header.strip().lower().encode("latin-1")
         self.clock = clock
         self.hits: dict[tuple[str, bool], tuple[float, int]] = {}
 
     def _client(self, scope) -> str:
+        if self.client_header:
+            for name, value in scope["headers"]:
+                if name == self.client_header:
+                    return value.decode("latin-1").strip()
         if self.trust_proxy:
             for name, value in scope["headers"]:
                 if name == b"x-forwarded-for":

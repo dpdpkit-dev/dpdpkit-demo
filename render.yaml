@@ -1,0 +1,16 @@
+# Render Blueprint for the demo site (DEMO-10). In the Render dashboard: New > Blueprint > dpdpkit-demo.
+services:
+  - type: web
+    name: dpdpkit-demo
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    healthCheckPath: /healthz
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: DEMO_RESET_HOURS
+        value: "24"
+      # Cloudflare overwrites this header on every request to a Render service, so callers can't forge it.
+      - key: DEMO_CLIENT_IP_HEADER
+        value: CF-Connecting-IP
