@@ -1,0 +1,12 @@
+{% extends "django_demo/base.html" %}
+{% block content %}
+{% if ok %}
+<h1>Allowed</h1>
+<p>{{ what }}</p>
+{% else %}
+<h1>Blocked by the consent check</h1>
+<p>{{ error.message }}</p>
+<p><code>{{ error.code }}</code>{% if error.details %} {{ error.details }}{% endif %}</p>
+{% endif %}
+<p><a href="{% url 'index' %}">Back</a></p>
+{% endblock %}

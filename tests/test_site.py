@@ -78,3 +78,42 @@ def test_fastapi_demo_consent_preferences_and_rights_flows():
         assert [r["id"] for r in c.get(f"{base}/dpdp/requests", headers=who).json()["items"]] == [opened.json()["id"]]
 
         assert c.get(f"{base}/dpdp/consents/me").status_code == 401  # unknown users are not signed in
+
+
+def test_django_page_embeds_the_django_demo():
+    html = client.get("/packages/django").text
+    assert 'src="/demo/django/"' in html
+    assert "coming (DEMO-03)" not in html
+
+
+def test_django_demo_template_tags_and_consent_checks():
+    base = "/demo/django"
+    with TestClient(app) as c:
+        anon = c.get(f"{base}/")
+        assert anon.status_code == 200
+        assert 'class="dpdp-notice"' in anon.text  # {% dpdp_notice %}
+        assert "does not provide legal advice" in anon.text
+        assert 'class="dpdp-preferences"' not in anon.text  # needs someone signed in
+        token = c.cookies["csrftoken"]
+        post = lambda path: c.post(f"{base}{path}", data={"csrfmiddlewaretoken": token}, headers={"X-CSRFToken": token})
+        assert post("/offers/send/").status_code == 401
+
+        assert c.get(f"{base}/act-as/u_vikram/", follow_redirects=False).status_code == 302
+        assert c.get(f"{base}/act-as/nobody/").status_code == 404
+        page = c.get(f"{base}/")
+        assert 'class="dpdp-preferences"' in page.text  # {% dpdp_preferences %}
+        assert "checked" not in page.text  # nothing pre-ticked
+        assert 'हम आपके' in c.get(f"{base}/?lang=hi").text
+
+        assert post("/offers/send/").status_code == 403  # decorator
+        assert post("/offers/digest/").status_code == 403  # mixin
+
+        saved = c.post(f"{base}/preferences/", data={"purpose": ["marketing"], "notice_version": "1", "locale": "en",
+                                                     "csrfmiddlewaretoken": token}, follow_redirects=False)
+        assert saved.status_code == 302
+        assert post("/offers/send/").status_code == 200
+        assert post("/offers/digest/").status_code == 200
+        assert "checked" in c.get(f"{base}/").text
+
+        c.post(f"{base}/preferences/", data={"notice_version": "1", "locale": "en", "csrfmiddlewaretoken": token})
+        assert post("/offers/send/").status_code == 403  # unticking withdraws

@@ -1,0 +1,12 @@
+<p>
+  This page runs the real <code>dpdpkit-django</code> app in a small Django project mounted on this site at
+  <code>{{ django_prefix }}/</code>. The frame below is server-rendered by Django: the
+  <code>{{ '{% dpdp_notice %}' }}</code> and
+  <code>{{ '{% dpdp_preferences %}' }}</code> template tags show the notice and
+  the consent form, and two views are guarded by <code>@requires_consent</code> and
+  <code>RequiresConsentMixin</code>. Pick a fictional person, try the buttons (refused), tick "Send you offers",
+  save, and try them again. Data is kept in a temporary database and resets when the site restarts.
+</p>
+<iframe id="django-demo" title="dpdpkit-django demo" src="{{ django_prefix }}/" width="100%" height="900"
+        style="border: 1px solid #ddd; border-radius: 6px;"></iframe>
+<p><a href="{{ django_prefix }}/" target="_blank" rel="noopener">Open the demo in its own tab</a></p>

@@ -1,0 +1,36 @@
+{% extends "django_demo/base.html" %}
+{% load dpdpkit %}
+{% block content %}
+<p>
+  Act as:
+  {% for id, person in users.items %}
+  {% if id == user_id %}<strong>{{ person.name }}</strong>{% else %}<a href="{% url 'act-as' id %}">{{ person.name }}</a>{% endif %}{% if not forloop.last %} · {% endif %}
+  {% endfor %}
+  {% if not user_id %}(nobody yet: the preference form and consent checks need someone signed in){% endif %}
+  &nbsp;|&nbsp; Language: <a href="?lang=en">English</a> · <a href="?lang=hi">हिन्दी</a>
+</p>
+
+<h2>{% templatetag openblock %} dpdp_notice {% templatetag closeblock %}</h2>
+{% dpdp_notice locale=locale %}
+
+<h2>{% templatetag openblock %} dpdp_preferences {% templatetag closeblock %}</h2>
+{% if user_id %}
+{% dpdp_preferences action="preferences/" locale=locale %}
+{% else %}
+<p class="pending">Pick a person above to see their choices.</p>
+{% endif %}
+
+<h2>Consent checks</h2>
+<p>
+  Both buttons are views guarded by marketing consent: the first by <code>@requires_consent("marketing")</code>,
+  the second by <code>RequiresConsentMixin</code>. Nothing is pre-ticked, so they are refused until you tick
+  "Send you offers" above and save.
+</p>
+<form method="post" action="offers/send/">{% csrf_token %}<button type="submit">Send offer (decorator)</button></form>
+<form method="post" action="offers/digest/">{% csrf_token %}<button type="submit">Queue digest (mixin)</button></form>
+
+{% if states %}
+<h2>Recorded consent for {{ user.name }}</h2>
+<ul>{% for s in states %}<li><code>{{ s.purpose }}</code>: {{ s.status.value }}</li>{% endfor %}</ul>
+{% endif %}
+{% endblock %}

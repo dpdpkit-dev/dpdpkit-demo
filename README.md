@@ -23,6 +23,14 @@ rights request form. The page's "Act as" select picks one of two fictional users
 header. The React bundle is built from `frontend/` into `app/static/dist` (not committed), so run
 `npm install && npm run build` before starting the site.
 
+## Django page
+
+`/packages/django` frames a small Django project (`app/django_demo/`) running the published `dpdpkit-django`,
+mounted on this site at `/demo/django/` through Django's ASGI app and reusing `app/dpdpkit.yaml`. It is
+server-rendered: `{% dpdp_notice %}` and `{% dpdp_preferences %}` show the notice and the consent form, and two
+views are guarded by `@requires_consent("marketing")` and `RequiresConsentMixin`. The "Act as" links set a
+cookie naming one of the two fictional users. The database is a temporary SQLite file, removed on exit.
+
 ## Run
 
 ```
