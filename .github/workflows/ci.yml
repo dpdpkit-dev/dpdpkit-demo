@@ -23,7 +23,7 @@ jobs:
           node-version: 22
       - run: pip install -r requirements-dev.txt
       - run: npm ci && npm run build
-      - run: pytest -q
+      - run: python -m pytest -q
       - name: Smoke test every page against a running server
         run: |
           uvicorn app.main:app --port 8000 &

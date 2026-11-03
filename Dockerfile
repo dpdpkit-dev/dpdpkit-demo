@@ -1,6 +1,6 @@
 # One image for the whole demo site: the React and embed bundles are built in a Node stage, the site runs on Python.
 FROM node:22-slim AS web
-RUN apt-get update && apt-get install -y --no-install-recommends python3 ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends python-is-python3 ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY package.json package-lock.json vite.config.js admin-bundle.version ./
 RUN npm ci
