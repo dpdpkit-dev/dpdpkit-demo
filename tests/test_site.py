@@ -176,3 +176,29 @@ def test_client_demo_calls_hit_the_fastapi_backend_the_client_paths():
     assert client.post(f"{base}/requests", headers=who, json={"kind": "access", "details": {}}).status_code == 201
     assert client.get(f"{base}/me/export", headers=who).status_code == 200
     assert client.get(f"{base}/consents/me").status_code == 401  # DpdpError path: nobody signed in
+
+
+def test_admin_page_frames_the_dashboard():
+    html = client.get("/packages/admin").text
+    assert 'id="admin-demo"' in html and "/demo/admin/dpdp/admin/ui/" in html
+    assert "coming (DEMO-06)" not in html
+    assert client.get("/demo/admin/dpdp/admin/ui/").status_code == 200  # the release bundle, fetched by `npm run build`
+    assert "<div id=\"root\"" in client.get("/demo/admin/dpdp/admin/ui/").text
+
+
+def test_admin_backend_is_seeded_with_requests_consent_retention_and_an_incident():
+    api = "/demo/admin/dpdp"
+    items = client.get(f"{api}/admin/requests").json()["items"]
+    assert {r["status"] for r in items} >= {"received", "in_progress", "completed"}
+    assert len(client.get(f"{api}/admin/requests", params={"open": True}).json()["items"]) < len(items)
+    stats = {s["purpose"]: s for s in client.get(f"{api}/admin/consent/stats").json()["items"]}
+    assert stats["marketing"]["grants"] > 0 and stats["marketing"]["withdrawals"] > 0
+    retention = client.get(f"{api}/admin/retention/preview").json()["items"]
+    assert {i["purpose"] for i in retention} == {"account", "marketing"}
+    assert len(client.get(f"{api}/admin/incidents").json()["items"]) == 1
+    assert client.post(f"{api}/admin/ledger/verify").json()["ok"] is True
+
+
+def test_admin_seeding_does_not_disturb_the_fastapi_demo():
+    api = "/demo/fastapi/dpdp"
+    assert client.get(f"{api}/admin/requests").status_code in (401, 403)  # that backend has no admin guard

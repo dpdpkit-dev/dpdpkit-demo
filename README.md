@@ -13,7 +13,8 @@ All data on the site is fictional. The disclaimer appears in the footer of every
 
 Python packages are pinned in `requirements.txt` (PyPI) and npm packages in `package.json`. The site never
 imports from sibling checkouts. `@dpdpkit/embed` is not on npm yet and `dpdpkit-admin` is a GitHub release
-bundle, so neither is installed here; their pages say so and are filled in by DEMO-04 and DEMO-06.
+bundle, so neither is installed from a registry here. The embed bundle is copied from npm and the admin bundle is
+downloaded from its GitHub release (see below).
 
 ## FastAPI page
 
@@ -46,6 +47,16 @@ published embed bundle to `app/static/dist/embed.js`.
 `/demo/fastapi/dpdp`. `frontend/client-demo.js` passes the client a custom `fetch`, so each request (method, URL,
 headers, body) and response (status, body) is printed in a log, and a failure shows the `DpdpError` code. Each
 button runs one client call. The "Act as" select sets the `X-User` header.
+
+## Admin page
+
+`/packages/admin` frames the `dpdpkit-admin` dashboard. A second `dpdpkit-fastapi` backend (`app/admin_demo.py`, own
+in-memory database, mounted as a sub-app at `/demo/admin/dpdp`) is seeded at start-up with fictional consent
+decisions, rights requests at different stages (including near-deadline and overdue ones), retention erasures due
+within a week and one incident. The admin guard gives every visitor the admin role, which is fine only because the
+data is fictional. The published wheel carries a placeholder dashboard page, so `npm run build` runs
+`scripts/fetch_admin_bundle.py`, which downloads the release pinned in `admin-bundle.version`, checks its sha256
+and unpacks it to `app/static/dist/admin`; the site serves it at `/demo/admin/dpdp/admin/ui/`.
 
 ## Run
 

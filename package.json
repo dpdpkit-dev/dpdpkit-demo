@@ -3,7 +3,7 @@
   "private": true,
   "description": "Demo website for dpdpkit. Fictional data only.",
   "scripts": {
-    "build": "vite build && node scripts/copy-embed.mjs"
+    "build": "vite build && node scripts/copy-embed.mjs && python scripts/fetch_admin_bundle.py app/static/dist/admin"
   },
   "dependencies": {
     "@dpdpkit/client": "0.1.0-alpha.1",

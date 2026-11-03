@@ -1,0 +1,11 @@
+<p>
+  This page runs the <code>dpdpkit-admin</code> dashboard (the GitHub release bundle) on a <code>dpdpkit-fastapi</code>
+  backend that was filled with made-up data when the site started. The request queue holds rights requests at
+  different stages, some close to their deadline and one past it; consent analytics counts grants and withdrawals per
+  purpose; the retention monitor lists erasures coming up in the next week; and the incident register has one
+  breach with its notification clocks running. Assign, respond to or reject a request to see it change. Anyone can
+  open this dashboard because the data is fictional, and everything resets when the site restarts.
+</p>
+<iframe id="admin-demo" title="dpdpkit-admin dashboard demo" src="{{ admin_ui }}" width="100%" height="800"
+        style="border: 1px solid #ddd; border-radius: 6px;"></iframe>
+<p><a href="{{ admin_ui }}" target="_blank" rel="noopener">Open the dashboard in its own tab</a></p>
