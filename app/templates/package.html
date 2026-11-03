@@ -6,5 +6,9 @@
 <h2>Install</h2>
 <pre><code>{{ package.install }}</code></pre>
 <h2>Demo</h2>
+{% if package.slug == "fastapi" %}
+{% include "demo_fastapi.html" %}
+{% else %}
 <p class="pending">The interactive demo for this page is coming ({{ package.demo_ticket }}).</p>
+{% endif %}
 {% endblock %}

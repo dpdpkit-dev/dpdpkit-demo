@@ -15,11 +15,20 @@ Python packages are pinned in `requirements.txt` (PyPI) and npm packages in `pac
 imports from sibling checkouts. `@dpdpkit/embed` is not on npm yet and `dpdpkit-admin` is a GitHub release
 bundle, so neither is installed here; their pages say so and are filled in by DEMO-04 and DEMO-06.
 
+## FastAPI page
+
+`/packages/fastapi` runs the published `dpdpkit-fastapi` backend (mounted at `/demo/fastapi/dpdp`, in-memory
+SQLite, config in `app/dpdpkit.yaml`) with `@dpdpkit/react` showing the consent notice, preference centre and
+rights request form. The page's "Act as" select picks one of two fictional users and sends it in the `X-User`
+header. The React bundle is built from `frontend/` into `app/static/dist` (not committed), so run
+`npm install && npm run build` before starting the site.
+
 ## Run
 
 ```
 python -m venv .venv && .venv/Scripts/activate   # source .venv/bin/activate on macOS/Linux
 pip install -r requirements-dev.txt
+npm install && npm run build                     # the React demos
 uvicorn app.main:app --reload
 pytest -q
 ```

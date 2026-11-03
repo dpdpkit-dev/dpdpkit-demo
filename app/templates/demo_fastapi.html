@@ -1,0 +1,19 @@
+<p>
+  This page runs the real <code>dpdpkit-fastapi</code> backend, mounted on this site at
+  <code>{{ demo_prefix }}</code>, with the <code>@dpdpkit/react</code> components in front of it. Pick a
+  fictional person, give or withdraw consent, change your preferences, then open a rights request.
+  Data is kept in memory and resets when the site restarts.
+</p>
+<p>
+  <label for="demo-user">Act as</label>
+  <select id="demo-user">
+    {% for id, user in demo_users.items() %}<option value="{{ id }}">{{ user.name }} ({{ user.email }})</option>{% endfor %}
+  </select>
+  <label for="demo-locale">Language</label>
+  <select id="demo-locale"><option value="en">English</option><option value="hi">हिन्दी</option></select>
+</p>
+<div id="fastapi-demo" data-base-url="{{ demo_prefix }}" data-default-user="{{ demo_users | first }}">
+  <noscript>The demo needs JavaScript.</noscript>
+</div>
+<link rel="stylesheet" href="/static/dist/fastapi-demo.css">
+<script type="module" src="/static/dist/fastapi-demo.js"></script>

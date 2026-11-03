@@ -7,11 +7,13 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from . import fastapi_demo
 from .packages import BY_SLUG, DISCLAIMER, FICTIONAL_NOTE, PACKAGES
 
 BASE = Path(__file__).parent
 
 app = FastAPI(title="dpdpkit demo")
+fastapi_demo.install(app)
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 templates = Jinja2Templates(directory=BASE / "templates")
 templates.env.globals.update(packages=PACKAGES, disclaimer=DISCLAIMER, fictional_note=FICTIONAL_NOTE)
@@ -27,4 +29,5 @@ def package_page(request: Request, slug: str):
     package = BY_SLUG.get(slug)
     if package is None:
         raise HTTPException(status_code=404)
-    return templates.TemplateResponse(request, "package.html", {"package": package})
+    context = {"package": package, "demo_users": fastapi_demo.DEMO_USERS, "demo_prefix": fastapi_demo.PREFIX}
+    return templates.TemplateResponse(request, "package.html", context)

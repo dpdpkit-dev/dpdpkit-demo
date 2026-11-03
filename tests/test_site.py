@@ -48,3 +48,33 @@ def test_dependencies_come_from_registries():
     for name in ("dpdpkit-core", "dpdpkit-fastapi", "dpdpkit-django", "dpdpkit-server", "dpdpkit-pii"):
         assert any(s.startswith(f"{name}==") for s in specs), name
     assert set(pkg["dependencies"]) == {"@dpdpkit/client", "@dpdpkit/react"}
+
+
+def test_fastapi_page_mounts_the_react_demo():
+    html = client.get("/packages/fastapi").text
+    assert 'id="fastapi-demo"' in html
+    assert "/static/dist/fastapi-demo.js" in html
+    assert "coming (DEMO-02)" not in html
+
+
+def test_fastapi_demo_consent_preferences_and_rights_flows():
+    base, who = "/demo/fastapi", {"X-User": "u_vikram"}
+    with TestClient(app) as c:  # the context manager runs startup, which migrates the database
+        notice = c.get(f"{base}/dpdp/notices/current", headers=who).json()
+        assert {p["id"] for p in notice["purposes"]} == {"account", "marketing"}
+        assert c.post(f"{base}/offers/send", headers=who).status_code == 403  # nothing pre-ticked
+
+        granted = c.post(f"{base}/dpdp/consents", headers=who,
+                         json={"decisions": [{"purpose": "marketing", "granted": True}]})
+        assert granted.status_code == 201
+        assert c.post(f"{base}/offers/send", headers=who).status_code == 200
+
+        withdrawn = c.post(f"{base}/dpdp/consents/marketing/withdraw", headers=who)
+        assert withdrawn.json()["status"] == "withdrawn"
+        assert c.post(f"{base}/offers/send", headers=who).status_code == 403
+
+        opened = c.post(f"{base}/dpdp/requests", headers=who, json={"kind": "access"})
+        assert opened.status_code == 201
+        assert [r["id"] for r in c.get(f"{base}/dpdp/requests", headers=who).json()["items"]] == [opened.json()["id"]]
+
+        assert c.get(f"{base}/dpdp/consents/me").status_code == 401  # unknown users are not signed in

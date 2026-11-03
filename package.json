@@ -2,8 +2,17 @@
   "name": "dpdpkit-demo",
   "private": true,
   "description": "Demo website for dpdpkit. Fictional data only.",
+  "scripts": {
+    "build": "vite build"
+  },
   "dependencies": {
     "@dpdpkit/client": "0.1.0-alpha.1",
     "@dpdpkit/react": "0.1.0-alpha.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.2.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "vite": "8.3.5"
   }
 }
